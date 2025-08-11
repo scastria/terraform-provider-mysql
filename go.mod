@@ -2,9 +2,13 @@ module github.com/scastria/terraform-provider-mysql
 
 go 1.24
 
-require github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
+require (
+	github.com/go-sql-driver/mysql v1.9.3
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
+)
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect

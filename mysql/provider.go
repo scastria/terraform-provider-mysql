@@ -36,62 +36,11 @@ func Provider() *schema.Provider {
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("MYSQL_PASSWORD", nil),
 			},
-			//"region": {
-			//	Type:         schema.TypeString,
-			//	Optional:     true,
-			//	DefaultFunc:  schema.EnvDefaultFunc("KONNECT_REGION", "us"),
-			//	ValidateFunc: validation.StringInSlice([]string{"us", "eu", "au"}, false),
-			//},
-			//"num_retries": {
-			//	Type:        schema.TypeInt,
-			//	Optional:    true,
-			//	DefaultFunc: schema.EnvDefaultFunc("KONNECT_NUM_RETRIES", 3),
-			//},
-			//"retry_delay": {
-			//	Type:        schema.TypeInt,
-			//	Optional:    true,
-			//	DefaultFunc: schema.EnvDefaultFunc("KONNECT_RETRY_DELAY", 30),
-			//},
-			//"default_tags": {
-			//	Type:     schema.TypeSet,
-			//	Optional: true,
-			//	Elem: &schema.Schema{
-			//		Type: schema.TypeString,
-			//	},
-			//},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			//"konnect_control_plane":           resourceControlPlane(),
-			//"konnect_authentication_settings": resourceAuthenticationSettings(),
-			//"konnect_identity_provider":       resourceIdentityProvider(),
-			//"konnect_user":                    resourceUser(),
-			//"konnect_team":                    resourceTeam(),
-			//"konnect_team_user":               resourceTeamUser(),
-			//"konnect_team_role":               resourceTeamRole(),
-			//"konnect_team_mappings":           resourceTeamMappings(),
-			//"konnect_user_role":               resourceUserRole(),
-			//"konnect_service":                 resourceService(),
-			//"konnect_route":                   resourceRoute(),
-			//"konnect_consumer":                resourceConsumer(),
-			//"konnect_consumer_key":            resourceConsumerKey(),
-			//"konnect_consumer_acl":            resourceConsumerACL(),
-			//"konnect_consumer_basic":          resourceConsumerBasic(),
-			//"konnect_consumer_hmac":           resourceConsumerHMAC(),
-			//"konnect_consumer_jwt":            resourceConsumerJWT(),
-			//"konnect_plugin":                  resourcePlugin(),
-			//"konnect_custom_plugin_schema":    resourceCustomPluginSchema(),
+			"mysql_user": resourceUser(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{
-			//"konnect_control_plane": dataSourceControlPlane(),
-			//"konnect_user":          dataSourceUser(),
-			//"konnect_team":          dataSourceTeam(),
-			//"konnect_role":          dataSourceRole(),
-			//"konnect_team_role":     dataSourceTeamRole(),
-			//"konnect_user_role":     dataSourceUserRole(),
-			//"konnect_nodes":         dataSourceNodes(),
-			//"konnect_consumer":      dataSourceConsumer(),
-			//"konnect_service":       dataSourceService(),
-		},
+		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
@@ -100,9 +49,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	host := d.Get("host").(string)
 	port := d.Get("port").(int)
 	db := d.Get("db").(string)
+	username := d.Get("username").(string)
+	password := d.Get("password").(string)
 
 	var diags diag.Diagnostics
-	c, err := client.NewClient(host, port, db)
+	c, err := client.NewClient(host, port, db, username, password)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
