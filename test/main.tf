@@ -14,3 +14,6 @@ resource "mysql_user" "User" {
   auth_plugin = "AWSAuthenticationPlugin"
   auth_plugin_alias = "RDS"
 }
+resource "mysql_role" "Role" {
+  name = "TestRole"
+}
