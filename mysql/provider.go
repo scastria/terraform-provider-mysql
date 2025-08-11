@@ -38,9 +38,10 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"mysql_user":      resourceUser(),
-			"mysql_role":      resourceRole(),
-			"mysql_user_role": resourceUserRole(),
+			"mysql_user":              resourceUser(),
+			"mysql_role":              resourceRole(),
+			"mysql_user_role":         resourceUserRole(),
+			"mysql_user_default_role": resourceUserDefaultRole(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,

@@ -75,7 +75,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 	defer db.Close()
 	var rowUser, rowPlugin, rowAuth string
-	err = c.QueryRow(ctx, db, "select User, plugin, authentication_string from mysql.user where User = '%s' and Host = '%%'", name).Scan(&rowUser, &rowPlugin, &rowAuth)
+	err = c.QueryRow(ctx, db, "select User, plugin, authentication_string from mysql.user where user = '%s' and host = '%%'", name).Scan(&rowUser, &rowPlugin, &rowAuth)
 	if err != nil {
 		d.SetId("")
 		return diag.FromErr(err)
