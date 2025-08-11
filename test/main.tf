@@ -7,13 +7,10 @@ terraform {
 }
 
 provider "mysql" {
-  host = ""
-  username = ""
-  password = ""
 }
 
 resource "mysql_user" "User" {
-  name = "TestUser2"
+  name = "TestUser"
   auth_plugin = "AWSAuthenticationPlugin"
   auth_plugin_alias = "RDS"
 }
