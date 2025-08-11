@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -60,6 +61,9 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	err = c.QueryRow(ctx, db, "select User from mysql.user where User = '%s' and Host = '%%'", name).Scan(&rowUser)
 	if err != nil {
 		d.SetId("")
+		if err == sql.ErrNoRows {
+			return diags
+		}
 		return diag.FromErr(err)
 	}
 	d.Set("name", rowUser)

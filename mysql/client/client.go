@@ -37,6 +37,12 @@ func (c *Client) QueryRow(ctx context.Context, db *sql.DB, queryTemplate string,
 	return db.QueryRow(query)
 }
 
+func (c *Client) Query(ctx context.Context, db *sql.DB, queryTemplate string, args ...any) (*sql.Rows, error) {
+	query := fmt.Sprintf(queryTemplate, args...)
+	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
+	return db.Query(query)
+}
+
 func (c *Client) Exec(ctx context.Context, db *sql.DB, queryTemplate string, args ...any) (sql.Result, error) {
 	query := fmt.Sprintf(queryTemplate, args...)
 	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})

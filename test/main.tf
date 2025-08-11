@@ -17,3 +17,7 @@ resource "mysql_user" "User" {
 resource "mysql_role" "Role" {
   name = "TestRole"
 }
+resource "mysql_user_role" "UserRole" {
+  user = mysql_user.User.name
+  role = mysql_role.Role.name
+}

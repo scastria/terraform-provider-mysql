@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -84,6 +85,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	err = c.QueryRow(ctx, db, "show variables like 'default_authentication_plugin'").Scan(&rowVar, &rowDefaultPlugin)
 	if err != nil {
 		d.SetId("")
+		if err == sql.ErrNoRows {
+			return diags
+		}
 		return diag.FromErr(err)
 	}
 	d.Set("name", rowUser)
