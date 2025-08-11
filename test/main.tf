@@ -25,3 +25,7 @@ resource "mysql_user_default_role" "UserDefaultRole" {
   user = mysql_user.User.name
   role = mysql_role.Role.name
 }
+resource "mysql_role_permission" "RolePermission" {
+  role = mysql_role.Role.name
+  privilege = "CREATE"
+}

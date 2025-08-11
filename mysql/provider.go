@@ -21,10 +21,10 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("MYSQL_PORT", 3306),
 			},
-			"db": {
+			"database": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("MYSQL_DB", "information_schema"),
+				DefaultFunc: schema.EnvDefaultFunc("MYSQL_DATABASE", "information_schema"),
 			},
 			"username": {
 				Type:        schema.TypeString,
@@ -39,9 +39,10 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"mysql_user":              resourceUser(),
-			"mysql_role":              resourceRole(),
 			"mysql_user_role":         resourceUserRole(),
 			"mysql_user_default_role": resourceUserDefaultRole(),
+			"mysql_role":              resourceRole(),
+			"mysql_role_permission":   resourceRolePermission(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
@@ -51,12 +52,12 @@ func Provider() *schema.Provider {
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	host := d.Get("host").(string)
 	port := d.Get("port").(int)
-	db := d.Get("db").(string)
+	database := d.Get("database").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 
 	var diags diag.Diagnostics
-	c, err := client.NewClient(host, port, db, username, password)
+	c, err := client.NewClient(host, port, database, username, password)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}

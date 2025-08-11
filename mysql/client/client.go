@@ -4,22 +4,23 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type Client struct {
 	host     string
 	port     int
-	db       string
+	database string
 	username string
 	password string
 }
 
-func NewClient(host string, port int, db string, username string, password string) (*Client, error) {
+func NewClient(host string, port int, database string, username string, password string) (*Client, error) {
 	c := &Client{
 		host:     host,
 		port:     port,
-		db:       db,
+		database: database,
 		username: username,
 		password: password,
 	}
@@ -27,7 +28,7 @@ func NewClient(host string, port int, db string, username string, password strin
 }
 
 func (c *Client) DbConnection() (*sql.DB, error) {
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", c.username, c.password, c.host, c.port, c.db))
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", c.username, c.password, c.host, c.port, c.database))
 	return db, err
 }
 
