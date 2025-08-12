@@ -14,38 +14,39 @@ type Client struct {
 	database string
 	username string
 	password string
+	conn     *sql.DB
 }
 
 func NewClient(host string, port int, database string, username string, password string) (*Client, error) {
+	conn, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, host, port, database))
+	if err != nil {
+		return nil, err
+	}
 	c := &Client{
 		host:     host,
 		port:     port,
 		database: database,
 		username: username,
 		password: password,
+		conn:     conn,
 	}
 	return c, nil
 }
 
-func (c *Client) DbConnection() (*sql.DB, error) {
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", c.username, c.password, c.host, c.port, c.database))
-	return db, err
-}
-
-func (c *Client) QueryRow(ctx context.Context, db *sql.DB, queryTemplate string, args ...any) *sql.Row {
+func (c *Client) QueryRow(ctx context.Context, queryTemplate string, args ...any) *sql.Row {
 	query := fmt.Sprintf(queryTemplate, args...)
 	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
-	return db.QueryRow(query)
+	return c.conn.QueryRow(query)
 }
 
-func (c *Client) Query(ctx context.Context, db *sql.DB, queryTemplate string, args ...any) (*sql.Rows, error) {
+func (c *Client) Query(ctx context.Context, queryTemplate string, args ...any) (*sql.Rows, error) {
 	query := fmt.Sprintf(queryTemplate, args...)
 	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
-	return db.Query(query)
+	return c.conn.Query(query)
 }
 
-func (c *Client) Exec(ctx context.Context, db *sql.DB, queryTemplate string, args ...any) (sql.Result, error) {
+func (c *Client) Exec(ctx context.Context, queryTemplate string, args ...any) (sql.Result, error) {
 	query := fmt.Sprintf(queryTemplate, args...)
 	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
-	return db.Exec(query)
+	return c.conn.Exec(query)
 }

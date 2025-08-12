@@ -39,13 +39,7 @@ func resourceUserRoleCreate(ctx context.Context, d *schema.ResourceData, m inter
 	c := m.(*client.Client)
 	user := d.Get("user").(string)
 	role := d.Get("role").(string)
-	db, err := c.DbConnection()
-	if err != nil {
-		d.SetId("")
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	_, err = c.Exec(ctx, db, "grant '%s' to '%s'", role, user)
+	_, err := c.Exec(ctx, "grant '%s' to '%s'", role, user)
 	if err != nil {
 		d.SetId("")
 		return diag.FromErr(err)
@@ -60,13 +54,7 @@ func resourceUserRoleRead(ctx context.Context, d *schema.ResourceData, m interfa
 	tokens := strings.Split(d.Id(), ":")
 	user := tokens[0]
 	role := tokens[1]
-	db, err := c.DbConnection()
-	if err != nil {
-		d.SetId("")
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	rows, err := c.Query(ctx, db, "show grants for '%s'", user)
+	rows, err := c.Query(ctx, "show grants for '%s'", user)
 	if err != nil {
 		d.SetId("")
 		return diag.FromErr(err)
@@ -99,12 +87,7 @@ func resourceUserRoleDelete(ctx context.Context, d *schema.ResourceData, m inter
 	tokens := strings.Split(d.Id(), ":")
 	user := tokens[0]
 	role := tokens[1]
-	db, err := c.DbConnection()
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	_, err = c.Exec(ctx, db, "revoke '%s' from '%s'", role, user)
+	_, err := c.Exec(ctx, "revoke '%s' from '%s'", role, user)
 	if err != nil {
 		return diag.FromErr(err)
 	}

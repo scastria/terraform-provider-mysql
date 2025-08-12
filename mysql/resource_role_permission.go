@@ -80,13 +80,7 @@ func resourceRolePermissionCreate(ctx context.Context, d *schema.ResourceData, m
 		target = ""
 	}
 	on := translateTarget(level, target)
-	db, err := c.DbConnection()
-	if err != nil {
-		d.SetId("")
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	_, err = c.Exec(ctx, db, "grant %s on %s to '%s'", privilege, on, role)
+	_, err := c.Exec(ctx, "grant %s on %s to '%s'", privilege, on, role)
 	if err != nil {
 		d.SetId("")
 		return diag.FromErr(err)
@@ -104,13 +98,7 @@ func resourceRolePermissionRead(ctx context.Context, d *schema.ResourceData, m i
 	level := tokens[2]
 	target := tokens[3]
 	on := translateTarget(level, target)
-	db, err := c.DbConnection()
-	if err != nil {
-		d.SetId("")
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	rows, err := c.Query(ctx, db, "show grants for '%s'", role)
+	rows, err := c.Query(ctx, "show grants for '%s'", role)
 	if err != nil {
 		d.SetId("")
 		return diag.FromErr(err)
@@ -158,12 +146,7 @@ func resourceRolePermissionDelete(ctx context.Context, d *schema.ResourceData, m
 	level := tokens[2]
 	target := tokens[3]
 	on := translateTarget(level, target)
-	db, err := c.DbConnection()
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	_, err = c.Exec(ctx, db, "revoke %s on %s from '%s'", privilege, on, role)
+	_, err := c.Exec(ctx, "revoke %s on %s from '%s'", privilege, on, role)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -39,13 +39,7 @@ func resourceUserDefaultRoleCreate(ctx context.Context, d *schema.ResourceData, 
 	c := m.(*client.Client)
 	user := d.Get("user").(string)
 	role := d.Get("role").(string)
-	db, err := c.DbConnection()
-	if err != nil {
-		d.SetId("")
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	_, err = c.Exec(ctx, db, "set default role '%s' to '%s'", role, user)
+	_, err := c.Exec(ctx, "set default role '%s' to '%s'", role, user)
 	if err != nil {
 		d.SetId("")
 		return diag.FromErr(err)
@@ -60,14 +54,8 @@ func resourceUserDefaultRoleRead(ctx context.Context, d *schema.ResourceData, m 
 	tokens := strings.Split(d.Id(), ":")
 	user := tokens[0]
 	role := tokens[1]
-	db, err := c.DbConnection()
-	if err != nil {
-		d.SetId("")
-		return diag.FromErr(err)
-	}
-	defer db.Close()
 	var count int
-	err = c.QueryRow(ctx, db, "select count(*) from mysql.default_roles where user = '%s' and host = '%%' and default_role_user = '%s' and default_role_host = '%%'", user, role).Scan(&count)
+	err := c.QueryRow(ctx, "select count(*) from mysql.default_roles where user = '%s' and host = '%%' and default_role_user = '%s' and default_role_host = '%%'", user, role).Scan(&count)
 	if err != nil {
 		d.SetId("")
 		return diag.FromErr(err)
@@ -86,13 +74,7 @@ func resourceUserDefaultRoleUpdate(ctx context.Context, d *schema.ResourceData, 
 	c := m.(*client.Client)
 	user := d.Get("user").(string)
 	role := d.Get("role").(string)
-	db, err := c.DbConnection()
-	if err != nil {
-		d.SetId("")
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	_, err = c.Exec(ctx, db, "set default role '%s' to '%s'", role, user)
+	_, err := c.Exec(ctx, "set default role '%s' to '%s'", role, user)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -105,12 +87,7 @@ func resourceUserDefaultRoleDelete(ctx context.Context, d *schema.ResourceData, 
 	c := m.(*client.Client)
 	tokens := strings.Split(d.Id(), ":")
 	user := tokens[0]
-	db, err := c.DbConnection()
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	defer db.Close()
-	_, err = c.Exec(ctx, db, "set default role NONE to '%s'", user)
+	_, err := c.Exec(ctx, "set default role NONE to '%s'", user)
 	if err != nil {
 		return diag.FromErr(err)
 	}
