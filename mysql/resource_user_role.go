@@ -39,10 +39,10 @@ func resourceUserRoleCreate(ctx context.Context, d *schema.ResourceData, m inter
 	c := m.(*client.Client)
 	user := d.Get("user").(string)
 	role := d.Get("role").(string)
-	_, err := c.Exec(ctx, "grant '%s' to '%s'", role, user)
+	query, _, err := c.Exec(ctx, "grant '%s' to '%s'", role, user)
 	if err != nil {
 		d.SetId("")
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	d.SetId(fmt.Sprintf("%s:%s", user, role))
 	return diags
@@ -54,10 +54,10 @@ func resourceUserRoleRead(ctx context.Context, d *schema.ResourceData, m interfa
 	tokens := strings.Split(d.Id(), ":")
 	user := tokens[0]
 	role := tokens[1]
-	rows, err := c.Query(ctx, "show grants for '%s'", user)
+	query, rows, err := c.Query(ctx, "show grants for '%s'", user)
 	if err != nil {
 		d.SetId("")
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	var foundPerm bool
 	for rows.Next() {
@@ -87,9 +87,9 @@ func resourceUserRoleDelete(ctx context.Context, d *schema.ResourceData, m inter
 	tokens := strings.Split(d.Id(), ":")
 	user := tokens[0]
 	role := tokens[1]
-	_, err := c.Exec(ctx, "revoke '%s' from '%s'", role, user)
+	query, _, err := c.Exec(ctx, "revoke '%s' from '%s'", role, user)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	d.SetId("")
 	return diags

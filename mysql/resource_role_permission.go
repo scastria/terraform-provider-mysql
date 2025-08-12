@@ -80,10 +80,10 @@ func resourceRolePermissionCreate(ctx context.Context, d *schema.ResourceData, m
 		target = ""
 	}
 	on := translateTarget(level, target)
-	_, err := c.Exec(ctx, "grant %s on %s to '%s'", privilege, on, role)
+	query, _, err := c.Exec(ctx, "grant %s on %s to '%s'", privilege, on, role)
 	if err != nil {
 		d.SetId("")
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	d.SetId(fmt.Sprintf("%s:%s:%s:%s", role, privilege, level, target))
 	return diags
@@ -98,10 +98,10 @@ func resourceRolePermissionRead(ctx context.Context, d *schema.ResourceData, m i
 	level := tokens[2]
 	target := tokens[3]
 	on := translateTarget(level, target)
-	rows, err := c.Query(ctx, "show grants for '%s'", role)
+	query, rows, err := c.Query(ctx, "show grants for '%s'", role)
 	if err != nil {
 		d.SetId("")
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	var foundPerm bool
 	re := regexp.MustCompile(`GRANT\s+(.+)\s+ON\s+(.+)\s+TO\s+.*`)
@@ -146,9 +146,9 @@ func resourceRolePermissionDelete(ctx context.Context, d *schema.ResourceData, m
 	level := tokens[2]
 	target := tokens[3]
 	on := translateTarget(level, target)
-	_, err := c.Exec(ctx, "revoke %s on %s from '%s'", privilege, on, role)
+	query, _, err := c.Exec(ctx, "revoke %s on %s from '%s'", privilege, on, role)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	d.SetId("")
 	return diags

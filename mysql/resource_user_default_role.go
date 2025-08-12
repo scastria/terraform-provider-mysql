@@ -39,10 +39,10 @@ func resourceUserDefaultRoleCreate(ctx context.Context, d *schema.ResourceData, 
 	c := m.(*client.Client)
 	user := d.Get("user").(string)
 	role := d.Get("role").(string)
-	_, err := c.Exec(ctx, "set default role '%s' to '%s'", role, user)
+	query, _, err := c.Exec(ctx, "set default role '%s' to '%s'", role, user)
 	if err != nil {
 		d.SetId("")
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	d.SetId(fmt.Sprintf("%s:%s", user, role))
 	return diags
@@ -55,10 +55,11 @@ func resourceUserDefaultRoleRead(ctx context.Context, d *schema.ResourceData, m 
 	user := tokens[0]
 	role := tokens[1]
 	var count int
-	err := c.QueryRow(ctx, "select count(*) from mysql.default_roles where user = '%s' and host = '%%' and default_role_user = '%s' and default_role_host = '%%'", user, role).Scan(&count)
+	query, row := c.QueryRow(ctx, "select count(*) from mysql.default_roles where user = '%s' and host = '%%' and default_role_user = '%s' and default_role_host = '%%'", user, role)
+	err := row.Scan(&count)
 	if err != nil {
 		d.SetId("")
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	if count == 0 {
 		d.SetId("")
@@ -74,9 +75,9 @@ func resourceUserDefaultRoleUpdate(ctx context.Context, d *schema.ResourceData, 
 	c := m.(*client.Client)
 	user := d.Get("user").(string)
 	role := d.Get("role").(string)
-	_, err := c.Exec(ctx, "set default role '%s' to '%s'", role, user)
+	query, _, err := c.Exec(ctx, "set default role '%s' to '%s'", role, user)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	d.SetId(fmt.Sprintf("%s:%s", user, role))
 	return diags
@@ -87,9 +88,9 @@ func resourceUserDefaultRoleDelete(ctx context.Context, d *schema.ResourceData, 
 	c := m.(*client.Client)
 	tokens := strings.Split(d.Id(), ":")
 	user := tokens[0]
-	_, err := c.Exec(ctx, "set default role NONE to '%s'", user)
+	query, _, err := c.Exec(ctx, "set default role NONE to '%s'", user)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	d.SetId("")
 	return diags

@@ -33,20 +33,22 @@ func NewClient(host string, port int, database string, username string, password
 	return c, nil
 }
 
-func (c *Client) QueryRow(ctx context.Context, queryTemplate string, args ...any) *sql.Row {
+func (c *Client) QueryRow(ctx context.Context, queryTemplate string, args ...any) (string, *sql.Row) {
 	query := fmt.Sprintf(queryTemplate, args...)
 	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
-	return c.conn.QueryRow(query)
+	return query, c.conn.QueryRow(query)
 }
 
-func (c *Client) Query(ctx context.Context, queryTemplate string, args ...any) (*sql.Rows, error) {
+func (c *Client) Query(ctx context.Context, queryTemplate string, args ...any) (string, *sql.Rows, error) {
 	query := fmt.Sprintf(queryTemplate, args...)
 	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
-	return c.conn.Query(query)
+	rows, err := c.conn.Query(query)
+	return query, rows, err
 }
 
-func (c *Client) Exec(ctx context.Context, queryTemplate string, args ...any) (sql.Result, error) {
+func (c *Client) Exec(ctx context.Context, queryTemplate string, args ...any) (string, sql.Result, error) {
 	query := fmt.Sprintf(queryTemplate, args...)
 	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
-	return c.conn.Exec(query)
+	result, err := c.conn.Exec(query)
+	return query, result, err
 }
