@@ -30,3 +30,7 @@ resource "mysql_role_permission" "RolePermission" {
   role = mysql_role.Role.name
   privilege = "CREATE"
 }
+resource "mysql_role_permission" "RolePermission2" {
+  role = mysql_role.Role.name
+  privilege = "GRANT OPTION"
+}

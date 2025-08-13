@@ -119,9 +119,12 @@ func resourceRolePermissionRead(ctx context.Context, d *schema.ResourceData, m i
 			d.SetId("")
 			return diag.Errorf("Unable to parse grant statement: %s", rowPerm)
 		}
-		if strings.Contains(strings.ToLower(matches[1]), privilegeLower) && strings.Contains(strings.ReplaceAll(strings.ToLower(matches[2]), "`", ""), onLower) {
-			foundPerm = true
-			break
+		// First check target since grant option priv is special
+		if strings.Contains(strings.ReplaceAll(strings.ToLower(matches[2]), "`", ""), onLower) {
+			if ((privilegeLower == "grant option") && strings.Contains(strings.ToLower(rowPerm), "with grant option")) || (strings.Contains(strings.ToLower(matches[1]), privilegeLower)) {
+				foundPerm = true
+				break
+			}
 		}
 	}
 	if !foundPerm {
