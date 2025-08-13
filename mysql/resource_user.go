@@ -3,11 +3,14 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"regexp"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/scastria/terraform-provider-mysql/mysql/client"
 )
 
@@ -35,6 +38,11 @@ func resourceUser() *schema.Resource {
 				Optional:     true,
 				RequiredWith: []string{"auth_plugin"},
 			},
+			"email": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
+			},
 		},
 	}
 }
@@ -49,7 +57,12 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		authPluginAlias := d.Get("auth_plugin_alias").(string)
 		auth = fmt.Sprintf("identified with %s as '%s'", authPlugin, authPluginAlias)
 	}
-	query, _, err := c.Exec(ctx, "create user '%s' %s", name, auth)
+	atts := ""
+	email, ok := d.GetOk("email")
+	if ok {
+		atts = fmt.Sprintf(`attribute '{"email": "%s"}'`, email.(string))
+	}
+	query, _, err := c.Exec(ctx, "create user '%s' %s %s", name, auth, atts)
 	if err != nil {
 		d.SetId("")
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
@@ -63,8 +76,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	c := m.(*client.Client)
 	name := d.Id()
 	var rowUser, rowPlugin, rowAuth string
-	query, row := c.QueryRow(ctx, "select user, plugin, authentication_string from mysql.user where user = '%s' and host = '%%'", name)
-	err := row.Scan(&rowUser, &rowPlugin, &rowAuth)
+	var rowAtts sql.NullString
+	query, row := c.QueryRow(ctx, "select user, plugin, authentication_string, user_attributes from mysql.user where user = '%s' and host = '%%'", name)
+	err := row.Scan(&rowUser, &rowPlugin, &rowAuth, &rowAtts)
 	if err != nil {
 		d.SetId("")
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
@@ -84,6 +98,19 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if rowPlugin != rowDefaultPlugin {
 		d.Set("auth_plugin", rowPlugin)
 		d.Set("auth_plugin_alias", rowAuth)
+	}
+	if rowAtts.Valid {
+		var atts map[string]interface{}
+		err = json.Unmarshal([]byte(rowAtts.String), &atts)
+		if err != nil {
+			d.SetId("")
+			return diag.FromErr(err)
+		}
+		if metadata, ok := atts["metadata"].(map[string]interface{}); ok {
+			if email, ok := metadata["email"].(string); ok {
+				d.Set("email", email)
+			}
+		}
 	}
 	return diags
 }
@@ -115,7 +142,12 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		}
 		auth = fmt.Sprintf("identified with %s", rowVal)
 	}
-	query, _, err := c.Exec(ctx, "alter user '%s' %s", name, auth)
+	atts := `attribute '{"email": null}'`
+	email, ok := d.GetOk("email")
+	if ok {
+		atts = fmt.Sprintf(`attribute '{"email": "%s"}'`, email.(string))
+	}
+	query, _, err := c.Exec(ctx, "alter user '%s' %s %s", name, auth, atts)
 	if err != nil {
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
