@@ -8,7 +8,7 @@ that you would like to be added, please submit an Issue in corresponding GitHub 
 ```hcl
 terraform {
   required_providers {
-    konnect = {
+    mysql = {
       source  = "scastria/mysql"
       version = "~> 0.1.0"
     }
