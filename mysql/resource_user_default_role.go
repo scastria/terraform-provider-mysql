@@ -73,8 +73,9 @@ func resourceUserDefaultRoleRead(ctx context.Context, d *schema.ResourceData, m 
 func resourceUserDefaultRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := m.(*client.Client)
-	user := d.Get("user").(string)
-	role := d.Get("role").(string)
+	tokens := strings.Split(d.Id(), ":")
+	user := tokens[0]
+	role := tokens[1]
 	query, _, err := c.Exec(ctx, "set default role '%s' to '%s'", role, user)
 	if err != nil {
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
