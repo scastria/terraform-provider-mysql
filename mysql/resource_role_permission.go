@@ -98,6 +98,18 @@ func resourceRolePermissionRead(ctx context.Context, d *schema.ResourceData, m i
 	level := tokens[2]
 	target := tokens[3]
 	on := translateTarget(level, target)
+	// Must check for existence of role first
+	var count int
+	query, row := c.QueryRow(ctx, "select count(*) from mysql.user where user = '%s' and host = '%%'", role)
+	err := row.Scan(&count)
+	if err != nil {
+		d.SetId("")
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
+	}
+	if count == 0 {
+		d.SetId("")
+		return diags
+	}
 	query, rows, err := c.Query(ctx, "show grants for '%s'", role)
 	if err != nil {
 		d.SetId("")

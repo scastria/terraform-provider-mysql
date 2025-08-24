@@ -2,6 +2,8 @@ package mysql
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -54,6 +56,17 @@ func resourceUserRoleRead(ctx context.Context, d *schema.ResourceData, m interfa
 	tokens := strings.Split(d.Id(), ":")
 	user := tokens[0]
 	role := tokens[1]
+	// Must check for existence of user first
+	var rowUser string
+	query, row := c.QueryRow(ctx, "select user from mysql.user where user = '%s' and host = '%%'", user)
+	err := row.Scan(&rowUser)
+	if err != nil {
+		d.SetId("")
+		if errors.Is(err, sql.ErrNoRows) {
+			return diags
+		}
+		return diag.Errorf("Error executing query: %s, error: %v", query, err)
+	}
 	query, rows, err := c.Query(ctx, "show grants for '%s'", user)
 	if err != nil {
 		d.SetId("")
