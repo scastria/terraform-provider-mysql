@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -81,6 +82,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	err := row.Scan(&rowUser, &rowPlugin, &rowAuth, &rowAtts)
 	if err != nil {
 		d.SetId("")
+		if errors.Is(err, sql.ErrNoRows) {
+			return diags
+		}
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	// Get default authentication plugin
@@ -89,7 +93,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	err = row.Scan(&rowVar, &rowDefaultPlugin)
 	if err != nil {
 		d.SetId("")
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return diags
 		}
 		return diag.FromErr(err)
