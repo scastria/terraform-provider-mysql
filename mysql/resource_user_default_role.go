@@ -2,8 +2,8 @@ package mysql
 
 import (
 	"context"
-	"fmt"
-	"strings"
+	"database/sql"
+	"errors"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -44,51 +44,45 @@ func resourceUserDefaultRoleCreate(ctx context.Context, d *schema.ResourceData, 
 		d.SetId("")
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
-	d.SetId(fmt.Sprintf("%s:%s", user, role))
+	d.SetId(user)
 	return diags
 }
 
 func resourceUserDefaultRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := m.(*client.Client)
-	tokens := strings.Split(d.Id(), ":")
-	user := tokens[0]
-	role := tokens[1]
-	var count int
-	query, row := c.QueryRow(ctx, "select count(*) from mysql.default_roles where user = '%s' and host = '%%' and default_role_user = '%s' and default_role_host = '%%'", user, role)
-	err := row.Scan(&count)
+	user := d.Id()
+	var defaultRole string
+	query, row := c.QueryRow(ctx, "select default_role_user from mysql.default_roles where user = '%s' and host = '%%' and default_role_host = '%%'", user)
+	err := row.Scan(&defaultRole)
 	if err != nil {
 		d.SetId("")
+		if errors.Is(err, sql.ErrNoRows) {
+			return diags
+		}
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
-	if count == 0 {
-		d.SetId("")
-		return diags
-	}
 	d.Set("user", user)
-	d.Set("role", role)
+	d.Set("role", defaultRole)
 	return diags
 }
 
 func resourceUserDefaultRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := m.(*client.Client)
-	tokens := strings.Split(d.Id(), ":")
-	user := tokens[0]
-	role := tokens[1]
+	user := d.Id()
+	role := d.Get("role").(string)
 	query, _, err := c.Exec(ctx, "set default role '%s' to '%s'", role, user)
 	if err != nil {
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
-	d.SetId(fmt.Sprintf("%s:%s", user, role))
 	return diags
 }
 
 func resourceUserDefaultRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := m.(*client.Client)
-	tokens := strings.Split(d.Id(), ":")
-	user := tokens[0]
+	user := d.Id()
 	query, _, err := c.Exec(ctx, "set default role NONE to '%s'", user)
 	if err != nil {
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)

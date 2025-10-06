@@ -17,6 +17,6 @@ resource "mysql_user_default_role" "example" {
 * `user` - **(Required, ForceNew, String)** The name of the user.
 * `role` - **(Required, String)** The name of the default role. Must be a role that is assigned to the user.
 ## Attribute Reference
-* `id` - **(String)** Same as `user`:`role`
+* `id` - **(String)** Same as `user`
 ## Import
 User default roles can be imported using a proper value of `id` as described above

@@ -18,14 +18,21 @@ resource "mysql_user" "User" {
 resource "mysql_role" "Role" {
   name = "TestRole"
 }
-# resource "mysql_user_role" "UserRole" {
-#   user = mysql_user.User.name
-#   role = mysql_role.Role.name
-# }
-# resource "mysql_user_default_role" "UserDefaultRole" {
-#   user = mysql_user.User.name
-#   role = mysql_role.Role.name
-# }
+resource "mysql_role" "Role2" {
+  name = "TestRole2"
+}
+resource "mysql_user_role" "UserRole" {
+  user = mysql_user.User.name
+  role = mysql_role.Role.name
+}
+resource "mysql_user_role" "UserRole2" {
+  user = mysql_user.User.name
+  role = mysql_role.Role2.name
+}
+resource "mysql_user_default_role" "UserDefaultRole" {
+  user = mysql_user.User.name
+  role = mysql_role.Role.name
+}
 resource "mysql_role_permission" "RolePermission" {
   role = mysql_role.Role.name
   privilege = "CREATE"
