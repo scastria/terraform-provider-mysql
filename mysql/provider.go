@@ -57,7 +57,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	password := d.Get("password").(string)
 
 	var diags diag.Diagnostics
-	c, err := client.NewClient(host, port, database, username, password)
+	c, err := client.NewClient(ctx, host, port, database, username, password)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
