@@ -115,6 +115,7 @@ func resourceRolePermissionRead(ctx context.Context, d *schema.ResourceData, m i
 		d.SetId("")
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
+	defer rows.Close()
 	var foundPerm bool
 	re := regexp.MustCompile(`GRANT\s+(.+)\s+ON\s+(.+)\s+TO\s+.*`)
 	onLower := strings.ToLower(on)

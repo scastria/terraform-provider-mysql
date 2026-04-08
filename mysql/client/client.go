@@ -17,12 +17,13 @@ type Client struct {
 	conn     *sql.DB
 }
 
-func NewClient(host string, port int, database string, username string, password string, maxOpenConnections int) (*Client, error) {
+func NewClient(host string, port int, database string, username string, password string, maxOpenConnections int, maxIdleConnections int) (*Client, error) {
 	conn, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, host, port, database))
 	if err != nil {
 		return nil, err
 	}
 	conn.SetMaxOpenConns(maxOpenConnections)
+	conn.SetMaxIdleConns(maxIdleConnections)
 	c := &Client{
 		host:     host,
 		port:     port,

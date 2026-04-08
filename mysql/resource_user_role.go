@@ -72,6 +72,7 @@ func resourceUserRoleRead(ctx context.Context, d *schema.ResourceData, m interfa
 		d.SetId("")
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
+	defer rows.Close()
 	var foundPerm bool
 	for rows.Next() {
 		var rowPerm string
