@@ -17,12 +17,12 @@ type Client struct {
 	conn     *sql.DB
 }
 
-func NewClient(ctx context.Context, host string, port int, database string, username string, password string) (*Client, error) {
+func NewClient(host string, port int, database string, username string, password string, maxOpenConnections int) (*Client, error) {
 	conn, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, host, port, database))
 	if err != nil {
 		return nil, err
 	}
-	tflog.Error(ctx, "MySQL: OPENED CONNECTION")
+	conn.SetMaxOpenConns(maxOpenConnections)
 	c := &Client{
 		host:     host,
 		port:     port,
