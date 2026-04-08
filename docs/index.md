@@ -28,3 +28,5 @@ provider "mysql" {
 * `database` - **(Optional, String)** The default database/schema to connect to. Can be specified via env variable `MYSQL_DATABASE`. Default: `information_schema`.
 * `username` - **(Required, String)** Username to connect to server as. Can be specified via env variable `MYSQL_USERNAME`.
 * `password` - **(Required, String)** Password to connect to server with. Can be specified via env variable `MYSQL_PASSWORD`.
+* `max_open_connections` - **(Optional, Integer)** The maximum number of open connections allowed on the mysql server. Can be specified via env variable `MYSQL_MAX_OPEN_CONNECTIONS`. Default: `0`
+* `max_idle_connections` - **(Optional, Integer)** The maximum number of idle connections allowed on the mysql server. Can be specified via env variable `MYSQL_MAX_IDLE_CONNECTIONS`. Default: `2`
