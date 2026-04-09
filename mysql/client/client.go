@@ -36,27 +36,27 @@ func NewClient(host string, port int, database string, username string, password
 }
 
 func (c *Client) QueryRow(ctx context.Context, queryTemplate string, args ...any) (string, *sql.Row) {
-	query := fmt.Sprintf(queryTemplate, args...)
-	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
 	var stats = c.Conn.Stats()
 	tflog.Error(ctx, "MySQL Stats:", map[string]any{"InUse": stats.InUse, "Idle": stats.Idle, "Open": stats.OpenConnections})
-	return query, c.Conn.QueryRow(query)
+	query := fmt.Sprintf(queryTemplate, args...)
+	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
+	return query, c.Conn.QueryRowContext(ctx, query)
 }
 
 func (c *Client) Query(ctx context.Context, queryTemplate string, args ...any) (string, *sql.Rows, error) {
-	query := fmt.Sprintf(queryTemplate, args...)
-	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
 	var stats = c.Conn.Stats()
 	tflog.Error(ctx, "MySQL Stats:", map[string]any{"InUse": stats.InUse, "Idle": stats.Idle, "Open": stats.OpenConnections})
-	rows, err := c.Conn.Query(query)
+	query := fmt.Sprintf(queryTemplate, args...)
+	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
+	rows, err := c.Conn.QueryContext(ctx, query)
 	return query, rows, err
 }
 
 func (c *Client) Exec(ctx context.Context, queryTemplate string, args ...any) (string, sql.Result, error) {
-	query := fmt.Sprintf(queryTemplate, args...)
-	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
 	var stats = c.Conn.Stats()
 	tflog.Error(ctx, "MySQL Stats:", map[string]any{"InUse": stats.InUse, "Idle": stats.Idle, "Open": stats.OpenConnections})
-	result, err := c.Conn.Exec(query)
+	query := fmt.Sprintf(queryTemplate, args...)
+	tflog.Info(ctx, "MySQL SQL:", map[string]any{"SQL": query})
+	result, err := c.Conn.ExecContext(ctx, query)
 	return query, result, err
 }

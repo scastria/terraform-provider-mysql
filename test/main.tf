@@ -25,6 +25,7 @@ locals {
     "TestRole10"
   ]
 }
+
 # resource "mysql_user" "User" {
 #   name = "TestUser"
 #   auth_plugin = "AWSAuthenticationPlugin"
