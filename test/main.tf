@@ -11,31 +11,32 @@ provider "mysql" {
   max_idle_connections = 2
 }
 
-locals {
-  roles = [
-    "TestRole1",
-    "TestRole2",
-    "TestRole3",
-    "TestRole4",
-    "TestRole5",
-    "TestRole6",
-    "TestRole7",
-    "TestRole8",
-    "TestRole9",
-    "TestRole10"
-  ]
-}
+# locals {
+#   roles = [
+#     "TestRole1",
+#     "TestRole2",
+#     "TestRole3",
+#     "TestRole4",
+#     "TestRole5",
+#     "TestRole6",
+#     "TestRole7",
+#     "TestRole8",
+#     "TestRole9",
+#     "TestRole10"
+#   ]
+# }
 
 # resource "mysql_user" "User" {
 #   name = "TestUser"
-#   auth_plugin = "AWSAuthenticationPlugin"
-#   auth_plugin_alias = "RDS"
+# #   auth_plugin = "AWSAuthenticationPlugin"
+# #   auth_plugin_alias = "RDS"
+# #   password = "hellothere"
 #   email = "good@bad.com"
 # }
-resource "mysql_role" "Role" {
-  for_each = toset(local.roles)
-  name = each.key
-}
+# resource "mysql_role" "Role" {
+#   for_each = toset(local.roles)
+#   name = each.key
+# }
 # resource "mysql_role" "Role2" {
 #   name = "TestRole2"
 # }

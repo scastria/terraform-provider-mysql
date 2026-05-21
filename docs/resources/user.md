@@ -11,6 +11,7 @@ resource "mysql_user" "example" {
 * `auth_plugin` - **(Optional, String)** The plugin to use for authentication.
 * `auth_plugin_alias` - **(Optional, String)** The string used by the auth plugin. Must be specified if `auth_plugin` is specified.
 * `email` - **(Optional, String)** The email of the user stored in metadata attributes.
+* `password` - **(Optional, String, Sensitive)** The password to use for this user.  Cannot be used with `auth_plugin`.
 ## Attribute Reference
 * `id` - **(String)** Same as `name`.
 ## Import

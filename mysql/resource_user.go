@@ -39,6 +39,12 @@ func resourceUser() *schema.Resource {
 				Optional:     true,
 				RequiredWith: []string{"auth_plugin"},
 			},
+			"password": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"auth_plugin", "auth_plugin_alias"},
+			},
 			"email": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -58,12 +64,18 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		authPluginAlias := d.Get("auth_plugin_alias").(string)
 		auth = fmt.Sprintf("identified with %s as '%s'", authPlugin, authPluginAlias)
 	}
+	password, ok := d.GetOk("password")
+	passwordAuth := ""
+	if ok {
+		passwordStr := password.(string)
+		passwordAuth = fmt.Sprintf("identified by '%s'", passwordStr)
+	}
 	atts := ""
 	email, ok := d.GetOk("email")
 	if ok {
 		atts = fmt.Sprintf(`attribute '{"email": "%s"}'`, email.(string))
 	}
-	query, _, err := c.Exec(ctx, "create user '%s' %s %s", name, auth, atts)
+	query, _, err := c.Exec(ctx, "create user '%s' %s %s %s", name, auth, passwordAuth, atts)
 	if err != nil {
 		d.SetId("")
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
@@ -132,10 +144,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	name := d.Id()
 	auth := ""
-	authPlugin, ok := d.GetOk("auth_plugin")
-	if ok {
+	passwordAuth := ""
+	authPlugin, authOk := d.GetOk("auth_plugin")
+	password, passwordOk := d.GetOk("password")
+	if authOk {
 		authPluginAlias := d.Get("auth_plugin_alias").(string)
 		auth = fmt.Sprintf("identified with %s as '%s'", authPlugin, authPluginAlias)
+	} else if passwordOk {
+		passwordStr := password.(string)
+		passwordAuth = fmt.Sprintf("identified by '%s'", passwordStr)
 	} else {
 		// Get default auth plugin if not specified
 		var rowVar, rowVal string
@@ -151,7 +168,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if ok {
 		atts = fmt.Sprintf(`attribute '{"email": "%s"}'`, email.(string))
 	}
-	query, _, err := c.Exec(ctx, "alter user '%s' %s %s", name, auth, atts)
+	query, _, err := c.Exec(ctx, "alter user '%s' %s %s %s", name, auth, passwordAuth, atts)
 	if err != nil {
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
