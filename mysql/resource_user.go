@@ -100,15 +100,27 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diag.Errorf("Error executing query: %s, error: %v", query, err)
 	}
 	// Get default authentication plugin
+	// default_authentication_plugin was removed in 8.4; authentication_policy used in newer versions
 	var rowVar, rowDefaultPlugin string
 	query, row = c.QueryRow(ctx, "show variables like 'default_authentication_plugin'")
 	err = row.Scan(&rowVar, &rowDefaultPlugin)
 	if err != nil {
-		d.SetId("")
 		if errors.Is(err, sql.ErrNoRows) {
-			return diags
+			var rowVar2, rowPolicy string
+			query2, row2 := c.QueryRow(ctx, "show variables like 'authentication_policy'")
+			err2 := row2.Scan(&rowVar2, &rowPolicy)
+			if err2 != nil {
+				d.SetId("")
+				if errors.Is(err2, sql.ErrNoRows) {
+					return diags
+				}
+				return diag.FromErr(err2)
+			}
+			rowDefaultPlugin = rowPolicy
+		} else {
+			d.SetId("")
+			return diag.FromErr(err)
 		}
-		return diag.FromErr(err)
 	}
 	d.Set("name", rowUser)
 	if rowPlugin != rowDefaultPlugin {
@@ -154,14 +166,25 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		passwordStr := password.(string)
 		passwordAuth = fmt.Sprintf("identified by '%s'", passwordStr)
 	} else {
-		// Get default auth plugin if not specified
-		var rowVar, rowVal string
-		query, row := c.QueryRow(ctx, "show variables like 'default_authentication_plugin'")
-		err := row.Scan(&rowVar, &rowVal)
+		// Get default authentication plugin
+		// default_authentication_plugin was removed in 8.4; authentication_policy used in newer versions
+		var rowVar, rowDefaultPlugin string
+		query, row = c.QueryRow(ctx, "show variables like 'default_authentication_plugin'")
+		err = row.Scan(&rowVar, &rowDefaultPlugin)
 		if err != nil {
-			return diag.Errorf("Error executing query: %s, error: %v", query, err)
+			if errors.Is(err, sql.ErrNoRows) {
+				var rowVar2, rowPolicy string
+				query2, row2 := c.QueryRow(ctx, "show variables like 'authentication_policy'")
+				err2 := row2.Scan(&rowVar2, &rowPolicy)
+				if err2 != nil {
+					return diag.Errorf("Error executing query: %s, error: %v", query2, err2)
+				}
+				rowDefaultPlugin = rowPolicy
+			} else {
+				return diag.Errorf("Error executing query: %s, error: %v", query, err)
+			}
 		}
-		auth = fmt.Sprintf("identified with %s", rowVal)
+		auth = fmt.Sprintf("identified with %s", rowDefaultPlugin)
 	}
 	atts := `attribute '{"email": null}'`
 	email, ok := d.GetOk("email")
