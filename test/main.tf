@@ -11,6 +11,14 @@ provider "mysql" {
   max_idle_connections = 2
 }
 
+# data "mysql_role" "Role" {
+#   search_name = "stuff"
+# }
+#
+# output "test" {
+#   value = data.mysql_role.Role
+# }
+
 # locals {
 #   roles = [
 #     "TestRole1",

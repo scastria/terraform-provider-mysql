@@ -54,7 +54,9 @@ func Provider() *schema.Provider {
 			"mysql_role":              resourceRole(),
 			"mysql_role_permission":   resourceRolePermission(),
 		},
-		DataSourcesMap:       map[string]*schema.Resource{},
+		DataSourcesMap: map[string]*schema.Resource{
+			"mysql_role": dataSourceRole(),
+		},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
