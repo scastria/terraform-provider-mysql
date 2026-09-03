@@ -14,7 +14,7 @@ type Client struct {
 	database      string
 	username      string
 	password      string
-	serverVersion string
+	ServerVersion string
 	Conn          *sql.DB
 }
 
@@ -40,7 +40,7 @@ func NewClient(ctx context.Context, host string, port int, database string, user
 	if err != nil {
 		return nil, err
 	}
-	c.serverVersion = version
+	c.ServerVersion = "v" + version
 	tflog.Info(ctx, "MySQL Version:", map[string]any{"ServerVersion": version})
 	return c, nil
 }

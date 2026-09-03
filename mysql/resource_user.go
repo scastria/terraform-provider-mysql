@@ -13,6 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/scastria/terraform-provider-mysql/mysql/client"
+	"golang.org/x/mod/semver"
+)
+
+const (
+	DEFAULT_AUTHENTICATION_PLUGIN                 = "default_authentication_plugin"
+	DEFAULT_AUTHENTICATION_PLUGIN_REMOVAL_VERSION = "v8.4.0"
+	AUTHENTICATION_POLICY                         = "authentication_policy"
 )
 
 func resourceUser() *schema.Resource {
@@ -84,6 +91,17 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return diags
 }
 
+func getAuthPluginName(c *client.Client) string {
+	// Check for deprecations
+	var retVal string
+	if semver.Compare(c.ServerVersion, DEFAULT_AUTHENTICATION_PLUGIN_REMOVAL_VERSION) >= 0 {
+		retVal = AUTHENTICATION_POLICY
+	} else {
+		retVal = DEFAULT_AUTHENTICATION_PLUGIN
+	}
+	return retVal
+}
+
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := m.(*client.Client)
@@ -101,7 +119,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 	// Get default authentication plugin
 	var rowVar, rowDefaultPlugin string
-	query, row = c.QueryRow(ctx, "show variables like 'default_authentication_plugin'")
+	query, row = c.QueryRow(ctx, "show variables like '%s'", getAuthPluginName(c))
 	err = row.Scan(&rowVar, &rowDefaultPlugin)
 	if err != nil {
 		d.SetId("")
@@ -156,7 +174,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	} else {
 		// Get default auth plugin if not specified
 		var rowVar, rowVal string
-		query, row := c.QueryRow(ctx, "show variables like 'default_authentication_plugin'")
+		query, row := c.QueryRow(ctx, "show variables like '%s'", getAuthPluginName(c))
 		err := row.Scan(&rowVar, &rowVal)
 		if err != nil {
 			return diag.Errorf("Error executing query: %s, error: %v", query, err)
