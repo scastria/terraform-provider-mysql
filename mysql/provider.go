@@ -71,7 +71,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	maxIdleConnections := d.Get("max_idle_connections").(int)
 
 	var diags diag.Diagnostics
-	c, err := client.NewClient(host, port, database, username, password, maxOpenConnections, maxIdleConnections)
+	c, err := client.NewClient(ctx, host, port, database, username, password, maxOpenConnections, maxIdleConnections)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}

@@ -9,15 +9,16 @@ import (
 )
 
 type Client struct {
-	host     string
-	port     int
-	database string
-	username string
-	password string
-	Conn     *sql.DB
+	host          string
+	port          int
+	database      string
+	username      string
+	password      string
+	serverVersion string
+	Conn          *sql.DB
 }
 
-func NewClient(host string, port int, database string, username string, password string, maxOpenConnections int, maxIdleConnections int) (*Client, error) {
+func NewClient(ctx context.Context, host string, port int, database string, username string, password string, maxOpenConnections int, maxIdleConnections int) (*Client, error) {
 	Conn, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, host, port, database))
 	if err != nil {
 		return nil, err
@@ -32,6 +33,15 @@ func NewClient(host string, port int, database string, username string, password
 		password: password,
 		Conn:     Conn,
 	}
+	// Get server version
+	var version string
+	_, row := c.QueryRow(ctx, "select version()")
+	err = row.Scan(&version)
+	if err != nil {
+		return nil, err
+	}
+	c.serverVersion = version
+	tflog.Info(ctx, "MySQL Version:", map[string]any{"ServerVersion": version})
 	return c, nil
 }
 
